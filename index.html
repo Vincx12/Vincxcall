@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VincxCall — Ton appli de chat privée</title>
+<meta name="description" content="VincxCall — L'appli de messagerie gratuite, sans pub, 100% privée. Serveurs, appels vocaux, DMs, partage d'écran.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080810;
+  --bg2: #0e0e1a;
+  --bg3: #13131f;
+  --brand: #5865f2;
+  --brand2: #7289da;
+  --accent: #43b581;
+  --red: #ed4245;
+  --text: #f2f3ff;
+  --muted: #6b6b8a;
+  --border: rgba(255,255,255,0.07);
+  --glow: rgba(88,101,242,0.35);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* ── NOISE TEXTURE ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 0; opacity: 0.4;
+}
+
+/* ── NAV ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0;
+  z-index: 100;
+  padding: 18px 40px;
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(8,8,16,0.8);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+.nav-logo {
+  display: flex; align-items: center; gap: 10px;
+  font-family: 'Syne', sans-serif;
+  font-weight: 900; font-size: 22px;
+  letter-spacing: -0.5px;
+}
+.nav-logo .dot { color: var(--brand); }
+.nav-dl {
+  background: var(--brand);
+  color: #fff; border: none;
+  padding: 10px 24px; border-radius: 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500; font-size: 15px;
+  cursor: pointer; text-decoration: none;
+  transition: all 0.2s;
+  display: flex; align-items: center; gap: 8px;
+}
+.nav-dl:hover { background: var(--brand2); transform: translateY(-1px); box-shadow: 0 8px 24px var(--glow); }
+
+/* ── HERO ── */
+#hero {
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  text-align: center;
+  padding: 120px 24px 80px;
+  position: relative;
+}
+
+/* Mesh gradient background */
+#hero::after {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 20%, rgba(88,101,242,0.18) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 40% at 80% 80%, rgba(67,181,129,0.10) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 50% at 50% 0%, rgba(88,101,242,0.12) 0%, transparent 60%);
+  pointer-events: none; z-index: 0;
+}
+
+.hero-inner { position: relative; z-index: 1; max-width: 780px; }
+
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(88,101,242,0.12);
+  border: 1px solid rgba(88,101,242,0.3);
+  color: var(--brand2); padding: 6px 16px; border-radius: 100px;
+  font-size: 13px; font-weight: 500; margin-bottom: 32px;
+  animation: fadeUp 0.6s ease both;
+}
+.hero-badge span { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); display: inline-block; animation: blink 1.5s ease-in-out infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(48px, 8vw, 88px);
+  font-weight: 900;
+  line-height: 1.0;
+  letter-spacing: -2px;
+  animation: fadeUp 0.6s 0.1s ease both;
+}
+h1 .accent { color: var(--brand); }
+h1 .strike {
+  position: relative; color: var(--muted);
+}
+h1 .strike::after {
+  content: '';
+  position: absolute; left: 0; right: 0; top: 50%;
+  height: 3px; background: var(--red); transform: rotate(-2deg);
+}
+
+.hero-sub {
+  margin-top: 24px;
+  font-size: 20px; color: var(--muted); max-width: 500px; margin-inline: auto;
+  font-weight: 300; line-height: 1.5;
+  animation: fadeUp 0.6s 0.2s ease both;
+}
+
+.hero-actions {
+  margin-top: 44px;
+  display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;
+  animation: fadeUp 0.6s 0.3s ease both;
+}
+
+.btn-primary {
+  background: var(--brand); color: #fff;
+  padding: 16px 36px; border-radius: 12px;
+  font-size: 17px; font-weight: 600;
+  text-decoration: none; border: none; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 10px;
+  box-shadow: 0 4px 32px var(--glow);
+  transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+}
+.btn-primary:hover { transform: translateY(-3px) scale(1.03); box-shadow: 0 12px 48px var(--glow); }
+
+.btn-secondary {
+  background: transparent; color: var(--text);
+  padding: 16px 32px; border-radius: 12px;
+  font-size: 17px; font-weight: 500;
+  text-decoration: none; border: 1px solid var(--border); cursor: pointer;
+  display: inline-flex; align-items: center; gap: 10px;
+  transition: all 0.2s;
+}
+.btn-secondary:hover { border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.04); }
+
+.hero-stats {
+  margin-top: 56px;
+  display: flex; gap: 48px; justify-content: center; flex-wrap: wrap;
+  animation: fadeUp 0.6s 0.4s ease both;
+}
+.stat { text-align: center; }
+.stat-num {
+  font-family: 'Syne', sans-serif;
+  font-size: 32px; font-weight: 900;
+  background: linear-gradient(135deg, #fff, var(--brand2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.stat-label { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+/* ── PREVIEW ── */
+#preview {
+  padding: 0 24px 120px;
+  display: flex; justify-content: center;
+  position: relative; z-index: 1;
+}
+
+.app-window {
+  width: 100%; max-width: 900px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  box-shadow: 0 32px 128px rgba(0,0,0,0.7), 0 0 0 1px var(--border);
+  animation: fadeUp 0.8s 0.5s ease both;
+  position: relative;
+}
+.app-window::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(to bottom, transparent 60%, rgba(8,8,16,0.95) 100%);
+  z-index: 2; pointer-events: none;
+}
+.win-bar {
+  background: #12121e; padding: 12px 16px;
+  display: flex; align-items: center; gap: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.win-dot { width: 12px; height: 12px; border-radius: 50%; }
+.win-dot.r { background: #ed4245; }
+.win-dot.y { background: #faa61a; }
+.win-dot.g { background: #43b581; }
+.win-title { flex: 1; text-align: center; font-size: 13px; color: var(--muted); }
+
+.win-body { display: flex; height: 480px; background: #0f0f1a; }
+.win-sidebar { width: 240px; background: #0a0a14; border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+.win-server-list { width: 52px; background: #07070f; display: flex; flex-direction: column; align-items: center; padding: 10px 0; gap: 8px; border-right: 1px solid var(--border); }
+.ws-icon { width: 36px; height: 36px; border-radius: 50%; background: var(--bg3); display: flex; align-items: center; justify-content: center; font-size: 16px; cursor: pointer; transition: border-radius 0.2s; }
+.ws-icon:hover, .ws-icon.active { border-radius: 12px; background: var(--brand); }
+.ws-icon.active { border-radius: 12px; background: var(--brand); }
+.win-channel-list { flex: 1; padding: 10px 8px; }
+.ch-header { font-size: 11px; font-weight: 700; color: var(--muted); letter-spacing: 0.08em; padding: 6px 8px; }
+.ch-item { padding: 6px 8px; border-radius: 6px; font-size: 14px; color: var(--muted); cursor: pointer; display: flex; align-items: center; gap: 6px; }
+.ch-item:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+.ch-item.active { background: rgba(88,101,242,0.2); color: var(--text); }
+.win-main { flex: 1; display: flex; flex-direction: column; }
+.win-header { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 15px; }
+.win-messages { flex: 1; padding: 16px; overflow: hidden; display: flex; flex-direction: column; gap: 12px; }
+.win-msg { display: flex; gap: 10px; align-items: flex-start; }
+.msg-av { width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #fff; }
+.msg-body {}
+.msg-name { font-size: 13px; font-weight: 700; color: var(--brand2); }
+.msg-txt { font-size: 14px; color: #ccc; margin-top: 1px; }
+.win-input { padding: 12px 16px; border-top: 1px solid var(--border); }
+.fake-input { background: #1a1a2e; border-radius: 8px; padding: 10px 14px; font-size: 14px; color: var(--muted); }
+
+/* ── FEATURES ── */
+#features {
+  padding: 120px 24px;
+  max-width: 1100px; margin: 0 auto;
+}
+
+.section-label {
+  font-size: 13px; font-weight: 700; letter-spacing: 0.15em;
+  color: var(--brand); text-transform: uppercase; margin-bottom: 16px;
+}
+.section-title {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(32px, 5vw, 52px);
+  font-weight: 900; letter-spacing: -1px;
+  line-height: 1.1; margin-bottom: 64px;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.feat {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 32px;
+  transition: all 0.3s;
+  position: relative; overflow: hidden;
+}
+.feat::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--brand), transparent);
+  opacity: 0; transition: opacity 0.3s;
+}
+.feat:hover { border-color: rgba(88,101,242,0.3); transform: translateY(-4px); }
+.feat:hover::before { opacity: 1; }
+
+.feat-icon {
+  width: 52px; height: 52px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; margin-bottom: 20px;
+}
+.feat h3 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; margin-bottom: 8px; }
+.feat p { color: var(--muted); font-size: 15px; line-height: 1.6; }
+
+.feat.big {
+  grid-column: span 2;
+  display: flex; gap: 32px; align-items: center;
+}
+@media (max-width: 700px) { .feat.big { grid-column: span 1; flex-direction: column; } }
+
+/* ── WHY ── */
+#why {
+  padding: 120px 24px;
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.why-inner { max-width: 1100px; margin: 0 auto; }
+.compare {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 48px;
+}
+@media (max-width: 640px) { .compare { grid-template-columns: 1fr; } }
+.compare-card {
+  border-radius: 20px; padding: 36px;
+  border: 1px solid var(--border);
+}
+.compare-card.them { background: rgba(237,66,69,0.05); border-color: rgba(237,66,69,0.15); }
+.compare-card.us { background: rgba(88,101,242,0.05); border-color: rgba(88,101,242,0.25); }
+.compare-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 20px; font-weight: 800; margin-bottom: 24px;
+  display: flex; align-items: center; gap: 10px;
+}
+.compare-list { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+.compare-list li {
+  display: flex; align-items: flex-start; gap: 10px;
+  font-size: 15px; color: var(--muted);
+}
+.compare-list li .ico { flex-shrink: 0; font-size: 16px; margin-top: 1px; }
+
+/* ── DOWNLOAD ── */
+#download {
+  padding: 160px 24px;
+  text-align: center;
+  position: relative;
+}
+#download::before {
+  content: '';
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 600px; height: 600px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(88,101,242,0.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+#download .section-label { justify-content: center; display: flex; }
+#download h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(36px, 6vw, 64px);
+  font-weight: 900; letter-spacing: -2px;
+  margin-bottom: 16px;
+}
+#download p { font-size: 18px; color: var(--muted); max-width: 440px; margin: 0 auto 48px; }
+.dl-btn-wrap { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.dl-btn {
+  background: linear-gradient(135deg, var(--brand), var(--brand2));
+  color: #fff; padding: 20px 56px;
+  border-radius: 14px; font-size: 20px; font-weight: 700;
+  text-decoration: none; border: none; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 12px;
+  box-shadow: 0 8px 48px var(--glow);
+  transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  font-family: 'Syne', sans-serif; letter-spacing: -0.5px;
+}
+.dl-btn:hover { transform: translateY(-4px) scale(1.04); box-shadow: 0 16px 64px var(--glow); }
+.dl-note { font-size: 13px; color: var(--muted); }
+.dl-chips {
+  display: flex; gap: 12px; margin-top: 32px; flex-wrap: wrap; justify-content: center;
+}
+.chip {
+  background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+  color: var(--muted); padding: 8px 18px; border-radius: 100px; font-size: 14px;
+  display: flex; align-items: center; gap: 6px;
+}
+
+/* ── FOOTER ── */
+footer {
+  padding: 40px 24px;
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 16px;
+  max-width: 1100px; margin: 0 auto;
+}
+.footer-logo {
+  font-family: 'Syne', sans-serif;
+  font-weight: 900; font-size: 18px;
+}
+.footer-logo span { color: var(--brand); }
+footer p { color: var(--muted); font-size: 14px; }
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(32px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.reveal {
+  opacity: 0; transform: translateY(40px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--bg3); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">💬 Vincx<span class="dot">Call</span></div>
+  <a class="nav-dl" href="https://drive.google.com/uc?export=download&id=1uYB7JZHl8JygPUnv9HhuWU9SsKXhpVRT">
+    ⬇️ Télécharger
+  </a>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">
+      <span></span> 100% gratuit — Sans pub — Fait en France
+    </div>
+    <h1>
+      Oublie<br>
+      <span class="strike">Discord</span><br>
+      <span class="accent">VincxCall</span> est là
+    </h1>
+    <p class="hero-sub">
+      L'appli de chat pour toi et tes amis. Serveurs, appels vocaux, DMs, partage d'écran — sans vendre tes données.
+    </p>
+    <div class="hero-actions">
+      <a class="btn-primary" href="#download">⬇️ Télécharger gratuitement</a>
+      <a class="btn-secondary" href="#features">Voir les fonctionnalités</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat">
+        <div class="stat-num">0€</div>
+        <div class="stat-label">Pour toujours</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">0 pub</div>
+        <div class="stat-label">Jamais</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">100%</div>
+        <div class="stat-label">Privé</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- APP PREVIEW -->
+<section id="preview">
+  <div class="app-window">
+    <div class="win-bar">
+      <div class="win-dot r"></div>
+      <div class="win-dot y"></div>
+      <div class="win-dot g"></div>
+      <div class="win-title">VincxCall</div>
+    </div>
+    <div class="win-body">
+      <div class="win-server-list">
+        <div class="ws-icon active">💬</div>
+        <div class="ws-icon">🎮</div>
+        <div class="ws-icon">🎵</div>
+        <div class="ws-icon" style="background:rgba(88,101,242,0.2);color:#5865f2;font-size:20px;border-radius:8px;">+</div>
+      </div>
+      <div class="win-channel-list">
+        <div class="ch-header">TEXTE</div>
+        <div class="ch-item active">💬 général</div>
+        <div class="ch-item">💬 annonces</div>
+        <div class="ch-item">💬 gaming</div>
+        <div class="ch-header" style="margin-top:12px">VOCAL</div>
+        <div class="ch-item">🔊 Vocal Général</div>
+        <div class="ch-item">🔊 Gaming</div>
+      </div>
+      <div class="win-main">
+        <div class="win-header">
+          <span style="color:var(--muted)">#</span> général
+          <span style="margin-left:auto;font-size:18px;color:var(--muted)">📞 🖥️ 👥</span>
+        </div>
+        <div class="win-messages">
+          <div class="win-msg">
+            <div class="msg-av" style="background:#5865f2">V</div>
+            <div class="msg-body">
+              <div class="msg-name">vincx</div>
+              <div class="msg-txt">Bienvenue sur VincxCall les gars ! 🎉</div>
+            </div>
+          </div>
+          <div class="win-msg">
+            <div class="msg-av" style="background:#43b581">L</div>
+            <div class="msg-body">
+              <div class="msg-name">lea</div>
+              <div class="msg-txt">Enfin une appli sans pub 🙏</div>
+            </div>
+          </div>
+          <div class="win-msg">
+            <div class="msg-av" style="background:#ed4245">M</div>
+            <div class="msg-body">
+              <div class="msg-name">max</div>
+              <div class="msg-txt">L'appel de groupe marche trop bien 🔥</div>
+            </div>
+          </div>
+        </div>
+        <div class="win-input">
+          <div class="fake-input">Envoyer un message dans #général...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="section-label">Ce que tu peux faire</div>
+  <div class="section-title">Tout ce qu'il te faut,<br>rien de superflu.</div>
+  <div class="features-grid">
+
+    <div class="feat reveal">
+      <div class="feat-icon" style="background:rgba(88,101,242,0.15)">💬</div>
+      <h3>Serveurs & canaux</h3>
+      <p>Crée tes propres serveurs, organise des canaux texte et vocal, invite tes amis avec un code.</p>
+    </div>
+
+    <div class="feat reveal">
+      <div class="feat-icon" style="background:rgba(237,66,69,0.15)">📞</div>
+      <h3>Appels vocaux</h3>
+      <p>Appels privés, de groupe et vocal en serveur. Qualité audio cristalline, aucune latence.</p>
+    </div>
+
+    <div class="feat reveal">
+      <div class="feat-icon" style="background:rgba(67,181,129,0.15)">🖥️</div>
+      <h3>Partage d'écran</h3>
+      <p>Partage ton écran pendant un appel en 2 clics. Parfait pour jouer ensemble ou travailler.</p>
+    </div>
+
+    <div class="feat reveal">
+      <div class="feat-icon" style="background:rgba(250,166,26,0.15)">👥</div>
+      <h3>DMs & groupes</h3>
+      <p>Messages directs, groupes de discussion avec appel intégré. Tout au même endroit.</p>
+    </div>
+
+    <div class="feat reveal">
+      <div class="feat-icon" style="background:rgba(88,101,242,0.15)">🔔</div>
+      <h3>Notifications desktop</h3>
+      <p>Reçois les messages même quand l'app est minimisée. Sons personnalisés inclus.</p>
+    </div>
+
+    <div class="feat reveal">
+      <div class="feat-icon" style="background:rgba(67,181,129,0.15)">🛡️</div>
+      <h3>Modération complète</h3>
+      <p>Kick, ban, logs de modération, messages épinglés. Tu gères ton serveur comme tu veux.</p>
+    </div>
+
+    <div class="feat big reveal">
+      <div style="flex:1">
+        <div class="feat-icon" style="background:rgba(88,101,242,0.15)">🔒</div>
+        <h3>Hébergé en France,<br>par toi</h3>
+        <p>Personne d'autre n'a accès à tes messages. Pas de vente de données, pas de surveillance. Ton serveur, tes règles — hébergé sur un VPS français.</p>
+      </div>
+      <div style="flex:1;text-align:center;font-size:80px;opacity:0.8">🇫🇷</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- WHY -->
+<section id="why">
+  <div class="why-inner">
+    <div class="section-label reveal">Pourquoi VincxCall ?</div>
+    <div class="section-title reveal">Discord vs VincxCall</div>
+    <div class="compare">
+      <div class="compare-card them reveal">
+        <div class="compare-title">😔 Discord</div>
+        <ul class="compare-list">
+          <li><span class="ico">❌</span> Vend tes données aux annonceurs</li>
+          <li><span class="ico">❌</span> Pubs partout (Nitro, banners...)</li>
+          <li><span class="ico">❌</span> Serveurs aux USA (RGPD ?)</li>
+          <li><span class="ico">❌</span> Peut supprimer ton compte sans raison</li>
+          <li><span class="ico">❌</span> Limites de taille de fichier</li>
+        </ul>
+      </div>
+      <div class="compare-card us reveal">
+        <div class="compare-title" style="color:var(--brand)">💬 VincxCall</div>
+        <ul class="compare-list">
+          <li><span class="ico">✅</span> Zéro vente de données</li>
+          <li><span class="ico">✅</span> Aucune pub, jamais</li>
+          <li><span class="ico">✅</span> Serveur hébergé en France</li>
+          <li><span class="ico">✅</span> Tu es le seul admin</li>
+          <li><span class="ico">✅</span> Entièrement gratuit</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DOWNLOAD -->
+<section id="download">
+  <div class="section-label">Prêt ?</div>
+  <h2>Télécharge<br><span style="color:var(--brand)">maintenant</span></h2>
+  <p>Gratuit. Pour Windows. Installe en 30 secondes.</p>
+  <div class="dl-btn-wrap">
+    <a class="dl-btn" href="https://drive.google.com/uc?export=download&id=1uYB7JZHl8JygPUnv9HhuWU9SsKXhpVRT">
+      ⬇️ Télécharger VincxCall
+    </a>
+    <div class="dl-note">Windows 10/11 — Gratuit pour toujours</div>
+  </div>
+  <div class="dl-chips">
+    <div class="chip">✅ Sans pub</div>
+    <div class="chip">🔒 Privé</div>
+    <div class="chip">💻 Windows 10/11</div>
+    <div class="chip">🇫🇷 Hébergé en France</div>
+    <div class="chip">🚀 Installation rapide</div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">Vincx<span>Call</span></div>
+  <p>Fait avec ❤️ en France — 100% gratuit</p>
+  <p style="color:var(--muted);font-size:13px">© 2025 VincxCall</p>
+</footer>
+
+<script>
+// Scroll reveal
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach((e, i) => {
+    if (e.isIntersecting) {
+      setTimeout(() => e.target.classList.add('visible'), i * 80);
+    }
+  });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
