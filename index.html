@@ -385,6 +385,8 @@
   }
   .mode-btn:hover { background: var(--gold); color: #000; }
   #trackerBtn:hover { background: var(--accent) !important; color: #000 !important; }
+  #comboFunBtn:hover { background: var(--accent-2) !important; color: #000 !important; }
+  #comboFunBtn::before { content: "⚠" !important; }
   .mode-btn .label-sub {
     display: block; font-size: 8px; opacity: 0.7; margin-top: 4px;
     text-transform: none; letter-spacing: 0.05em; font-weight: 400;
@@ -506,6 +508,66 @@
     font-family: 'JetBrains Mono', monospace; font-size: 10px;
     color: var(--accent-2); line-height: 1.6;
   }
+
+  /* === COMBINÉ FUN === */
+  .combo-fun-warning {
+    background: linear-gradient(135deg, rgba(255, 77, 94, 0.12), rgba(255, 94, 58, 0.08));
+    border: 2px solid var(--danger);
+    padding: 18px 20px; margin-bottom: 16px;
+    position: relative; overflow: hidden;
+  }
+  .combo-fun-warning::before {
+    content: ""; position: absolute; top: 0; right: 0;
+    width: 100px; height: 100px;
+    background: repeating-linear-gradient(45deg,
+      transparent, transparent 8px,
+      rgba(255, 77, 94, 0.15) 8px, rgba(255, 77, 94, 0.15) 16px);
+    pointer-events: none;
+  }
+  .combo-fun-warning-header {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 10px;
+    position: relative;
+  }
+  .combo-fun-triangle {
+    width: 32px; height: 32px;
+    background: var(--danger); color: #000;
+    clip-path: polygon(50% 8%, 95% 92%, 5% 92%);
+    display: grid; place-items: center;
+    font-weight: 900; font-size: 16px; font-family: 'JetBrains Mono', monospace;
+    padding-top: 8px;
+    animation: pulseTri 1.5s infinite;
+  }
+  @keyframes pulseTri {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+  }
+  .combo-fun-warning-title {
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: var(--danger); font-weight: 800; letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+  .combo-fun-warning-text {
+    font-family: 'Fraunces', serif; font-size: 14px;
+    color: var(--text); line-height: 1.5;
+    position: relative;
+  }
+  .combo-fun-warning-text strong {
+    color: var(--danger); font-weight: 800;
+  }
+  .combo-fun-warning-rule {
+    margin-top: 12px; padding-top: 10px;
+    border-top: 1px dashed rgba(255, 77, 94, 0.4);
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--danger); line-height: 1.6; position: relative;
+  }
+  .combo-fun-card {
+    background: linear-gradient(135deg, var(--bg-2), var(--panel));
+    border: 1px solid var(--accent-2); padding: 20px; margin-bottom: 20px;
+  }
+  .combo-fun-card .combo-title { color: var(--accent-2); }
+  .combo-fun-card .combo-cote { color: var(--accent-2); font-size: 32px; }
+  .combo-fun-card .combo-leg { border-left-color: var(--accent-2); }
+  .combo-fun-card .combo-leg-bet { color: var(--accent-2); }
 </style>
 </head>
 <body>
@@ -543,6 +605,10 @@
     <button class="mode-btn" id="comboBtn">
       Combiné intelligent
       <span class="label-sub">Claude assemble un combiné optimisé</span>
+    </button>
+    <button class="mode-btn" id="comboFunBtn" style="border-color:var(--accent-2);color:var(--accent-2);">
+      ⚠ Combiné FUN
+      <span class="label-sub">Cote 5-10, plus risqué — petite mise uniquement</span>
     </button>
     <button class="mode-btn" id="trackerBtn" style="border-color:var(--accent);color:var(--accent);">
       Mon tracker
@@ -1144,6 +1210,7 @@
   // === TOP PICKS MODE ===
   document.getElementById('topPicksBtn').addEventListener('click', loadTopPicks);
   document.getElementById('comboBtn').addEventListener('click', loadCombo);
+  document.getElementById('comboFunBtn').addEventListener('click', loadComboFun);
   document.getElementById('trackerBtn').addEventListener('click', showTracker);
 
   // === TRACKER ===
@@ -1634,6 +1701,183 @@ Réponds UNIQUEMENT avec le JSON.`;
     }
 
     html += `</div>`;
+    panelContent.innerHTML = html;
+  }
+
+  // === COMBO FUN MODE (cote 5-10, plus risqué) ===
+  async function loadComboFun() {
+    const key = getKey();
+    if (!key) { alert('Renseigne ta clé API Claude d\'abord.'); setupEl.scrollIntoView({ behavior: 'smooth' }); return; }
+
+    if (allMatches.length === 0) { alert('Aucun match chargé pour analyser.'); return; }
+
+    const candidates = allMatches.filter(m => m.state === 'pre').slice(0, 30);
+    if (candidates.length === 0) { alert('Aucun match à venir pour assembler un combiné.'); return; }
+
+    selectedMatch = null;
+    renderMatches();
+    panel.classList.add('visible');
+    panelMatch.textContent = '⚠ Combiné FUN';
+    panelContent.innerHTML = `
+      <div class="loading-state">
+        <div class="loading-text">Construction du combiné FUN</div>
+        <div class="loading-bar"></div>
+        <div class="loading-steps">
+          <span>Identification des paris audacieux</span>
+          <span>Recherche d'outsiders crédibles</span>
+          <span>Équilibrage cote 5-10</span>
+          <span>Validation finale</span>
+        </div>
+      </div>`;
+    panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    const bySport = {};
+    candidates.forEach(m => {
+      if (!bySport[m.sport]) bySport[m.sport] = [];
+      bySport[m.sport].push(m);
+    });
+
+    const matchListStr = Object.entries(bySport).map(([sport, matches]) =>
+      `### ${sport}\n` + matches.map(m =>
+        `- ${m.home} vs ${m.away} (${m.league}) — ${new Date(m.date).toLocaleString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`
+      ).join('\n')
+    ).join('\n\n');
+
+    const prompt = `Tu es ORACLE, analyste pari. Cette fois, construis UN COMBINÉ "FUN" — plus risqué mais avec un upside intéressant.
+
+PHILOSOPHIE DU COMBINÉ FUN
+==========================
+On vise une cote totale entre 5.0 et 10.0. C'est un pari plaisir à petite mise, PAS un pari sérieux. Le but : avoir un upside intéressant sur une mise faible (genre 1-3€).
+
+Ce N'EST PAS un combiné stupide à 50.0 avec 8 favoris écrasants empilés. C'est :
+- 3 à 5 sélections AUDACIEUSES mais CRÉDIBLES (cote individuelle 1.50 à 2.50)
+- OU 2-3 sélections plus risquées (cote 2.20 à 3.50)
+- Des "underdogs" avec un vrai angle d'analyse derrière (pas du n'importe quoi)
+- Des paris alternatifs créatifs (BTTS, scores serrés, +2.5 buts dans des matchs d'attaques, handicaps modérés)
+- Des matchs où l'analyse penche dans un sens même si le marché ne le voit pas
+
+À ÉVITER même en mode FUN :
+- Score exact (variance trop forte)
+- Sélections totalement aléatoires sans justification
+- Cote totale > 15 (devient du loto, plus du pari)
+- Sélections où tu n'as AUCUN angle d'analyse
+
+MATCHS DISPONIBLES
+==================
+${matchListStr}
+
+CONSIGNES
+=========
+1. Sélectionne 3-5 paris dans des sports/ligues différents.
+2. Cote individuelle visée : 1.50 à 2.80.
+3. Confiance individuelle 50-65% (assumée plus basse qu'un combiné classique).
+4. Chaque sélection doit avoir UN VRAI ARGUMENT d'analyse derrière (pas du hasard).
+5. Cote totale estimée : 5.0 à 10.0.
+6. Identifie clairement les risques principaux.
+7. Mentionne quels paris sont les plus "casse-gueule" du combiné.
+
+FORMAT (JSON UNIQUEMENT) :
+{
+  "legs": [
+    {
+      "sport": "Football",
+      "match_label": "Équipe A vs Équipe B",
+      "league": "Ligue 1",
+      "bet": "BTTS + Over 2.5",
+      "estimated_odds": 1.85,
+      "confidence": 58,
+      "rationale": "raison courte de l'angle",
+      "risk_level": "low|medium|high"
+    }
+  ],
+  "total_odds": 7.2,
+  "summary": "Ce qui rend ce combiné intéressant en 2 phrases",
+  "risks": ["risque principal 1", "risque 2"],
+  "weakest_leg": "Le pari le plus risqué du combiné et pourquoi"
+}
+
+Réponds UNIQUEMENT avec le JSON.`;
+
+    try {
+      const response = await callClaude(prompt, key);
+      const parsed = parseClaudeJSON(response);
+      renderComboFun(parsed);
+    } catch (e) {
+      panelContent.innerHTML = `<div class="error">⚠ Échec : ${escapeHtml(e.message)}</div>`;
+    }
+  }
+
+  function renderComboFun(p) {
+    if (!p || !Array.isArray(p.legs) || p.legs.length === 0) {
+      panelContent.innerHTML = '<div class="empty">Pas assez d\'opportunités pour un combiné fun aujourd\'hui.</div>';
+      return;
+    }
+
+    // === AVERTISSEMENT EN ROUGE EN HAUT ===
+    let html = `
+      <div class="combo-fun-warning">
+        <div class="combo-fun-warning-header">
+          <div class="combo-fun-triangle">!</div>
+          <div class="combo-fun-warning-title">Attention — Pari à risque</div>
+        </div>
+        <div class="combo-fun-warning-text">
+          Ce combiné est <strong>volontairement plus risqué</strong> pour viser une cote élevée. La probabilité que tout passe est <strong>faible</strong>.
+        </div>
+        <div class="combo-fun-warning-rule">
+          ⚠ <strong>Règle d'or :</strong> mise faible uniquement (1-3€ max). Considère-le comme un ticket plaisir, pas un pari sérieux. Ne jamais miser de l'argent que tu ne peux pas perdre.
+        </div>
+      </div>`;
+
+    // === LE COMBINÉ ===
+    html += `<div class="combo-fun-card">
+      <div class="combo-header">
+        <div class="combo-title">★ Combiné FUN ${p.legs.length} sélections</div>
+        <div class="combo-cote">
+          <span class="label">Cote totale</span>
+          ${(p.total_odds || 0).toFixed(2)}
+        </div>
+      </div>`;
+
+    p.legs.forEach((leg, i) => {
+      const riskBadge = leg.risk_level === 'high'
+        ? '<span style="color:var(--danger); font-weight:700;">⚠ TRÈS RISQUÉ</span>'
+        : leg.risk_level === 'medium'
+        ? '<span style="color:var(--accent-2); font-weight:700;">⚠ Risqué</span>'
+        : '<span style="color:var(--gold);">~ Modéré</span>';
+
+      html += `
+        <div class="combo-leg">
+          <div class="combo-leg-num">${i + 1}. ${escapeHtml(leg.sport)} · ${escapeHtml(leg.league || '')} · ${escapeHtml((leg.estimated_odds || 0).toFixed(2))} · ${riskBadge}</div>
+          <div class="combo-leg-match">${escapeHtml(leg.match_label)}</div>
+          <div class="combo-leg-bet">→ ${escapeHtml(leg.bet)} (conf. ${leg.confidence || 0}%)</div>
+          ${leg.rationale ? `<div class="combo-leg-rationale">${escapeHtml(leg.rationale)}</div>` : ''}
+        </div>`;
+    });
+
+    if (p.summary) {
+      html += `<div class="combo-summary">${escapeHtml(p.summary)}</div>`;
+    }
+
+    if (p.weakest_leg) {
+      html += `<div class="combo-risk" style="border-left-color:var(--danger); background:rgba(255,77,94,0.1); color:var(--danger);"><strong>⚠ Maillon faible :</strong> ${escapeHtml(p.weakest_leg)}</div>`;
+    }
+
+    if (Array.isArray(p.risks) && p.risks.length > 0) {
+      html += `<div class="combo-risk"><strong>Risques globaux :</strong> ${p.risks.map(r => escapeHtml(r)).join(' · ')}</div>`;
+    }
+
+    html += `</div>`;
+
+    // === RAPPEL FINAL ===
+    html += `
+      <div style="margin-top:16px; padding:14px 16px; background:var(--bg-2); border:1px dashed var(--danger);">
+        <div style="font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--danger); line-height:1.7; text-align:center;">
+          💡 <strong>Petit rappel :</strong> ce mode est conçu pour le plaisir, pas pour gagner.<br>
+          Sur le long terme, les combinés à cote élevée sont <strong>perdants statistiquement</strong>.<br>
+          Reste discipliné avec tes vrais paris (Top picks / Combiné intelligent).
+        </div>
+      </div>`;
+
     panelContent.innerHTML = html;
   }
 
